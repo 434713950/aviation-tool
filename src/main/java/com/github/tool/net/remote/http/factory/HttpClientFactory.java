@@ -2,10 +2,7 @@ package com.github.tool.net.remote.http.factory;
 
 import com.github.tool.net.remote.http.config.ConnectionProperties;
 import com.github.tool.net.remote.http.exception.HttpClientFactoryException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
+import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,6 +16,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * <p>httpclient 远程调用工厂</p>
@@ -32,28 +30,21 @@ public class HttpClientFactory {
 
     private CloseableHttpClient client;
 
-    private HttpClientFactory(final ConnectionProperties connectionProperties){
+    private HttpClientFactory(ConnectionProperties connectionProperties){
+        //线程池处理器
         PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = HttpClientManager.poolingHttpClientConnectionManager(connectionProperties.getMaxTotal(),connectionProperties.getDefaultMaxPerRoute());
         RequestConfig requestConfig = HttpClientManager.requestConfig(connectionProperties.getConnectTimeout(),connectionProperties.getConnectionRequestTimeout(),connectionProperties.getSocketTimeout(),connectionProperties.isStaleConnectionCheckEnabled());
         HttpRequestRetryHandler httpRequestRetryHandler = HttpClientManager.httpRequestRetryHandler(connectionProperties.getRetryTime());
 
-        /*
-         * 建议此处使用HttpClients.custom的方式来创建HttpClientBuilder，而不要使用HttpClientBuilder.create()方法来创建HttpClientBuilder
-         * 从官方文档可以得出，HttpClientBuilder是非线程安全的，但是HttpClients确实Immutable的，immutable 对象不仅能够保证对象的状态不被改变，
-         * 而且还可以不使用锁机制就能被其他线程共享
-         *
-         *  .setRetryHandler(httpRequestRetryHandler)    重试处理
-         *	.setKeepAliveStrategy(connectionKeepAliveStrategy)  保持策略
-         *	.setRoutePlanner(proxyRoutePlanner)         路由策略
-         */
+        // 建议此处使用HttpClients.custom的方式来创建HttpClientBuilder，而不要使用HttpClientBuilder.create()方法来创建HttpClientBuilder
+        // 从官方文档可以得出，HttpClientBuilder是非线程安全的，但是HttpClients确实Immutable的，immutable 对象不仅能够保证对象的状态不被改变，
+        // 而且还可以不使用锁机制就能被其他线程共享
         client = HttpClients.custom().setConnectionManager(poolingHttpClientConnectionManager)
                 //重试策略
                 .setRetryHandler(httpRequestRetryHandler)
                 .setDefaultRequestConfig(requestConfig)
-                /*
-                 *	.setKeepAliveStrategy(connectionKeepAliveStrategy)  保持策略
-                 *	.setRoutePlanner(proxyRoutePlanner)         路由策略
-                 */
+                //	.setKeepAliveStrategy(connectionKeepAliveStrategy)  保持策略
+                //	.setRoutePlanner(proxyRoutePlanner)         路由策略
                 .build();
     }
 
@@ -78,18 +69,33 @@ public class HttpClientFactory {
      * @return      响应的内容
      */
     public String httpGet(String url){
+        return httpGet(url,null);
+    }
+
+    public String httpGet(String url,Map<String,String> headers){
         HttpGet httpGet = new HttpGet(url);
+        if (headers!=null && !headers.isEmpty()){
+            for (Map.Entry<String,String> header: headers.entrySet()){
+                httpGet.addHeader(header.getKey(),header.getValue());
+            }
+        }
         try {
             HttpResponse response =  getClient().execute(httpGet);
-            int httpStatus = response.getStatusLine().getStatusCode();
-            String responseParam = EntityUtils.toString(response.getEntity());
-            if (httpStatus == HttpStatus.SC_OK) {
-                return responseParam;
-            }
-            throw new HttpClientFactoryException("GET response error : "+httpStatus);
+            return responseHandle(response, "UTF-8");
         } catch (IOException e) {
             throw new HttpClientFactoryException("GET request connect break",e);
         }
+    }
+
+
+    /**
+     * post请求
+     * @param url            请求的路径
+     * @param params         携带的参数
+     * @return               响应的内容
+     */
+    public String httpPost(String url,String params) {
+        return httpPost(url,params, "UTF-8",null);
     }
 
     /**
@@ -107,35 +113,39 @@ public class HttpClientFactory {
      * post请求
      * @param url            请求的路径
      * @param params         携带的参数
-     * @param encoding       编码
-     * @param cookie         cookie值
+     * @param encoding       响应数据编码
+     * @param headers        请求头
      * @return               响应的内容
      */
-    public String httpPost(String url,String params,String encoding,String cookie) {
+    public String httpPost(String url,String params,String encoding,Map<String,String> headers) {
+        CloseableHttpResponse response = null;
         try {
-            CloseableHttpResponse response = (CloseableHttpResponse) httpPostForResponse(url,params,cookie);
-            int httpStatus = response.getStatusLine().getStatusCode();
-            HttpEntity entity = response.getEntity();
-            if (httpStatus == HttpStatus.SC_OK) {
-                return EntityUtils.toString(entity,encoding);
+            response = (CloseableHttpResponse) httpPostForResponse(url, params, headers);
+            return responseHandle(response, encoding);
+        } finally {
+            try {
+                if (response!=null){
+                    response.close();
+                }
+            } catch (IOException e) {
+                throw new HttpClientFactoryException("POST request connect break",e);
             }
-            EntityUtils.consume(entity);
-            throw new HttpClientFactoryException("POST response error："+httpStatus);
-        } catch (IOException e) {
-            throw new HttpClientFactoryException("POST response data handle fail",e);
         }
     }
 
     /**
      * 发送post请求并返回响应体对象
-     * @param url           请求的路径
-     * @param params
-     * @return
+     * @param url           请求路径
+     * @param params        请求参数
+     * @param headers       请求头
+     * @return              响应流
      */
-    public HttpResponse httpPostForResponse(String url,String params,String cookie) {
+    private HttpResponse httpPostForResponse(String url, String params,Map<String,String> headers) {
         HttpPost httpPost = new HttpPost(url);
-        if (StringUtils.isNotEmpty(cookie)) {
-            httpPost.setHeader("Cookie", cookie);
+        if (headers!=null && !headers.isEmpty()){
+            for (Map.Entry<String,String> header: headers.entrySet()){
+                httpPost.addHeader(header.getKey(),header.getValue());
+            }
         }
         httpPost.setEntity(new StringEntity(params,ContentType.APPLICATION_JSON));
         try {
@@ -145,6 +155,24 @@ public class HttpClientFactory {
         }
     }
 
-
-
+    /**
+     * 响应流处理
+     * @param response  响应体
+     * @param encoding  解析的编码
+     * @return
+     */
+    private String responseHandle(HttpResponse response,String encoding){
+        try {
+            int httpStatus = response.getStatusLine().getStatusCode();
+            HttpEntity entity = response.getEntity();
+            if (httpStatus == HttpStatus.SC_OK) {
+                //这个方法会关闭流
+                return EntityUtils.toString(entity, encoding);
+            }
+            EntityUtils.consume(entity);
+            throw new HttpClientFactoryException("response error：" + httpStatus);
+        } catch (IOException e) {
+            throw new HttpClientFactoryException("response data handle fail",e);
+        }
+    }
 }
