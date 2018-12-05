@@ -140,7 +140,7 @@ public class HttpClientFactory {
      * @param headers       请求头
      * @return              响应流
      */
-    private HttpResponse httpPostForResponse(String url, String params,Map<String,String> headers) {
+    public HttpResponse httpPostForResponse(String url, String params,Map<String,String> headers) {
         HttpPost httpPost = new HttpPost(url);
         if (headers!=null && !headers.isEmpty()){
             for (Map.Entry<String,String> header: headers.entrySet()){

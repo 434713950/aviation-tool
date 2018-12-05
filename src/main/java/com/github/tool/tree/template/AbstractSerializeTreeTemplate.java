@@ -1,4 +1,4 @@
-package com.github.tool.tree.wrapper;
+package com.github.tool.tree.template;
 
 import com.github.tool.common.CollectionUtil;
 import com.github.tool.tree.model.TreeNode;
@@ -12,12 +12,7 @@ import java.util.List;
  * @author PengCheng
  * @date 2018/11/1
  */
-public abstract class AbstractSerializeTreeWarpper<T extends TreeNode<T>> extends AbstractTreeWrapper<T>{
-
-    public AbstractSerializeTreeWarpper(T pNode) {
-        mountChildrenNode(pNode);
-        this.pNode = pNode;
-    }
+public abstract class AbstractSerializeTreeTemplate<T extends TreeNode<T>> extends AbstractTreeTemplate<T>{
 
     /**
      * 挂载子节点,形成树结构。（子节点数据获取方式自定义）

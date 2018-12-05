@@ -1,7 +1,6 @@
-package com.github.tool.tree.wrapper;
+package com.github.tool.tree.template;
 
 import com.github.tool.tree.model.TreeNode;
-import com.github.tool.common.CollectionUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -14,14 +13,7 @@ import java.util.List;
  * @author PengCheng
  * @date 2018/10/31
  */
-public class PromiscuityTreeWarpper<T extends TreeNode<T>> extends AbstractTreeWrapper<T>{
-
-    public PromiscuityTreeWarpper(T pNode, List<T> allTreeNodeList) {
-        if (CollectionUtil.isNotBlank(allTreeNodeList)) {
-            mountChildrenNode(pNode, allTreeNodeList);
-            this.pNode = pNode;
-        }
-    }
+public class PromiscuityTreeTemplate<T extends TreeNode<T>> extends AbstractTreeTemplate<T>{
 
     /**
      *  挂载子节点,形成树结构 （所有可挂载的子节点已确定）
@@ -29,7 +21,7 @@ public class PromiscuityTreeWarpper<T extends TreeNode<T>> extends AbstractTreeW
      * @param pNode         父节点
      * @param treeNodeList  所有与该根关联的下级节点
      */
-    private void mountChildrenNode(T pNode, List<T> treeNodeList){
+    public void mountChildrenNode(T pNode, List<T> treeNodeList){
         //在挂载子节点前对当前节点进行处理
         preMountNodeParser(pNode);
 

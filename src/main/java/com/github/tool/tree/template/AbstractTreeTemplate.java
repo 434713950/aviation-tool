@@ -1,4 +1,4 @@
-package com.github.tool.tree.wrapper;
+package com.github.tool.tree.template;
 
 import com.github.tool.common.CollectionUtil;
 import com.github.tool.tree.model.TreeNode;
@@ -12,9 +12,7 @@ import java.util.List;
  * @author PengCheng
  * @date 2018/11/1
  */
-public abstract class AbstractTreeWrapper<T extends TreeNode<T>> {
-
-    protected T pNode;
+public abstract class AbstractTreeTemplate<T extends TreeNode<T>> {
 
     /**
      * 挂载子节点前对当前节点数据的解释处理
@@ -36,10 +34,10 @@ public abstract class AbstractTreeWrapper<T extends TreeNode<T>> {
      * @param isRetainChildren 是否要在铺平树结构后,继续展示各自的子节点数据
      * @return  铺平后的树
      */
-    protected List<T> tilingTreeNodes(boolean isRetainChildren){
+    protected List<T> tilingTreeNodes(T pNode,boolean isRetainChildren){
         List<T> storageContainer = new LinkedList<>();
-        openChildrenNode(this.pNode,storageContainer,isRetainChildren);
-        return null;
+        openChildrenNode(pNode,storageContainer,isRetainChildren);
+        return storageContainer;
     }
 
     private void openChildrenNode(T pNode,List<T> storageContainer,boolean isRetainChildren){
@@ -55,13 +53,5 @@ public abstract class AbstractTreeWrapper<T extends TreeNode<T>> {
                 openChildrenNode(childNode,storageContainer,isRetainChildren);
             }
         }
-    }
-
-    /**
-     * 获取包装后的数据结构
-     * @return
-     */
-    public T getPNode(){
-        return this.pNode;
     }
 }
