@@ -214,7 +214,7 @@ public class DateUtil {
      * @param amount 间隔月份
      * @return
      */
-    public static Date getFirstDayOfPreMonth(Date date, Integer amount) throws ParseException {
+    public static Date getFirstDayOfPreMonth(Date date, Integer amount){
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.MONTH, amount);
@@ -237,18 +237,16 @@ public class DateUtil {
     /**
      * 日期转星期
      * @param date 日期
-     * @return 星期几
+     * @return 0-6 对应星期日-> ->星期六
      */
     public static Integer dateToWeek(Date date){
-        int[] weekDays = {7, 1, 2, 3, 4, 5, 6};
         Calendar cal = Calendar.getInstance();
         cal.setTime(getDayStart(date));
-        // 指示一个星期中的某天。
-        int w = cal.get(Calendar.DAY_OF_WEEK) - 1;
-        if (w < 0) {
-            w = 0;
+        int weekIndex = cal.get(Calendar.DAY_OF_WEEK) - 1;
+        if (weekIndex < 0) {
+            weekIndex = 0;
         }
-        return weekDays[w];
+        return weekIndex;
     }
 
     /**
@@ -256,16 +254,11 @@ public class DateUtil {
      * @param date 时间
      * @return 星期几
      */
-    public static String dateToWeekStr(Date date) throws ParseException {
+    public static String dateToWeekStr(Date date){
         String[] weeks = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(getDayStart(date));
-        int weekIndex = cal.get(Calendar.DAY_OF_WEEK) - 1;
-        if (weekIndex < 0) {
-            weekIndex = 0;
-        }
-        return weeks[weekIndex];
+        return weeks[dateToWeek(date)];
     }
+
 
     /**
      * 当前日期是当月的第几天

@@ -1,4 +1,4 @@
-package com.github.tool.tree.template;
+package com.github.tool.tree.builder;
 
 import com.github.tool.common.CollectionUtil;
 import com.github.tool.tree.model.TreeNode;
@@ -7,12 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * <p>树结构包装器</p>
+ * <p>树结构对象建造</p>
  *  所有的树处理方式都要实现该接口
  * @author PengCheng
  * @date 2018/11/1
  */
-public abstract class AbstractTreeTemplate<T extends TreeNode<T>> {
+public abstract class AbstractTreeBuilder<T extends TreeNode<T>> {
 
     /**
      * 挂载子节点前对当前节点数据的解释处理

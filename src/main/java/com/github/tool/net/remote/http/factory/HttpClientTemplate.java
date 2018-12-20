@@ -1,8 +1,9 @@
 package com.github.tool.net.remote.http.factory;
 
-import com.github.tool.net.remote.http.config.ConnectionProperties;
+import com.github.tool.net.remote.http.config.HttpClientConnProperties;
 import com.github.tool.net.remote.http.exception.HttpClientFactoryException;
 import org.apache.http.*;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,27 +20,39 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * <p>httpclient 远程调用工厂</p>
- * singleton
+ * <p>httpclient 远程调用模板</p>
+ * 推荐在开发中使用该模板时保持全局唯一对象
+ * 在spring中,注入成bean
  * @author PengCheng
  * @date 2018/11/15
  */
-public class HttpClientFactory {
+public class HttpClientTemplate {
 
-    private volatile static HttpClientFactory factory;
+    private HttpClient client;
 
-    private CloseableHttpClient client;
+    public HttpClientTemplate(CloseableHttpClient client){
+        this.client = client;
+    }
 
-    private HttpClientFactory(ConnectionProperties connectionProperties){
+    public HttpClientTemplate(HttpClientConnProperties httpClientConnProperties){
+        this.client = createHttpClient(httpClientConnProperties);
+    }
+
+    /**
+     * 创建httpClient
+     * @param httpClientConnProperties  连接配置
+     * @return
+     */
+    private HttpClient createHttpClient(HttpClientConnProperties httpClientConnProperties){
         //线程池处理器
-        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = HttpClientManager.poolingHttpClientConnectionManager(connectionProperties.getMaxTotal(),connectionProperties.getDefaultMaxPerRoute());
-        RequestConfig requestConfig = HttpClientManager.requestConfig(connectionProperties.getConnectTimeout(),connectionProperties.getConnectionRequestTimeout(),connectionProperties.getSocketTimeout(),connectionProperties.isStaleConnectionCheckEnabled());
-        HttpRequestRetryHandler httpRequestRetryHandler = HttpClientManager.httpRequestRetryHandler(connectionProperties.getRetryTime());
+        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = HttpClientManager.poolingHttpClientConnectionManager(httpClientConnProperties.getMaxTotal(), httpClientConnProperties.getDefaultMaxPerRoute());
+        RequestConfig requestConfig = HttpClientManager.requestConfig(httpClientConnProperties.getConnectTimeout(), httpClientConnProperties.getConnectionRequestTimeout(), httpClientConnProperties.getSocketTimeout(), httpClientConnProperties.isStaleConnectionCheckEnabled());
+        HttpRequestRetryHandler httpRequestRetryHandler = HttpClientManager.httpRequestRetryHandler(httpClientConnProperties.getRetryTime());
 
         // 建议此处使用HttpClients.custom的方式来创建HttpClientBuilder，而不要使用HttpClientBuilder.create()方法来创建HttpClientBuilder
         // 从官方文档可以得出，HttpClientBuilder是非线程安全的，但是HttpClients确实Immutable的，immutable 对象不仅能够保证对象的状态不被改变，
         // 而且还可以不使用锁机制就能被其他线程共享
-        client = HttpClients.custom().setConnectionManager(poolingHttpClientConnectionManager)
+        return HttpClients.custom().setConnectionManager(poolingHttpClientConnectionManager)
                 //重试策略
                 .setRetryHandler(httpRequestRetryHandler)
                 .setDefaultRequestConfig(requestConfig)
@@ -48,18 +61,7 @@ public class HttpClientFactory {
                 .build();
     }
 
-    public static HttpClientFactory getInstance(final ConnectionProperties connectionProperties){
-        if (factory == null){
-            synchronized (HttpClientFactory.class){
-                if (factory == null){
-                    factory = new HttpClientFactory(connectionProperties);
-                }
-            }
-        }
-        return factory;
-    }
-
-    public CloseableHttpClient getClient(){
+    public HttpClient getClient(){
         return this.client;
     }
 
@@ -73,15 +75,19 @@ public class HttpClientFactory {
     }
 
     public String httpGet(String url,Map<String,String> headers){
-        HttpGet httpGet = new HttpGet(url);
-        if (headers!=null && !headers.isEmpty()){
-            for (Map.Entry<String,String> header: headers.entrySet()){
-                httpGet.addHeader(header.getKey(),header.getValue());
-            }
-        }
-        try {
-            HttpResponse response =  getClient().execute(httpGet);
+            HttpResponse response =httpGetForResponse(url,headers);
             return responseHandle(response, "UTF-8");
+    }
+
+    public HttpResponse httpGetForResponse(String url,Map<String,String> headers){
+        try {
+            HttpGet httpGet = new HttpGet(url);
+            if (headers!=null && !headers.isEmpty()){
+                for (Map.Entry<String,String> header: headers.entrySet()){
+                    httpGet.addHeader(header.getKey(),header.getValue());
+                }
+            }
+            return getClient().execute(httpGet);
         } catch (IOException e) {
             throw new HttpClientFactoryException("GET request connect break",e);
         }

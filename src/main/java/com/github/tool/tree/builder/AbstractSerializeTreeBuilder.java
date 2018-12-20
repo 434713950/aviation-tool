@@ -1,4 +1,4 @@
-package com.github.tool.tree.template;
+package com.github.tool.tree.builder;
 
 import com.github.tool.common.CollectionUtil;
 import com.github.tool.tree.model.TreeNode;
@@ -6,13 +6,13 @@ import com.github.tool.tree.model.TreeNode;
 import java.util.List;
 
 /**
- * <p>有序数据树结构包装器</p>
+ * <p>有序数据树结构建造器</p>
  * 根据根节点来查询子节点,并形成树
  * 实现obtainChildrenNode方法来决定子节点的获取方式
  * @author PengCheng
  * @date 2018/11/1
  */
-public abstract class AbstractSerializeTreeTemplate<T extends TreeNode<T>> extends AbstractTreeTemplate<T>{
+public abstract class AbstractSerializeTreeBuilder<T extends TreeNode<T>> extends AbstractTreeBuilder<T>{
 
     /**
      * 挂载子节点,形成树结构。（子节点数据获取方式自定义）

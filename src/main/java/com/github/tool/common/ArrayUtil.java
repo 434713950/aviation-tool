@@ -44,7 +44,7 @@ public class ArrayUtil {
     }
 
     /**
-     * 包装数组对象
+     * 包装成数组对象
      *
      * @param obj 对象，可以是对象数组或者基本类型数组
      * @return 包装类型数组或对象数组

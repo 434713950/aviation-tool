@@ -15,9 +15,9 @@ import java.util.List;
 @Accessors(chain = true)
 public class MockPage {
 
-   private List<Object> result;
+   private List<?> result;
 
-   private long total=0;
+   private int total=0;
 
    private int currentPage;
 

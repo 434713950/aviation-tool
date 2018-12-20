@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class MockPageUtil {
 
-    public static MockPage page(List<Object> objectList,int currentPage,int pageSize, boolean isZeroStart){
+    public static MockPage page(List<?> objectList,int currentPage,int pageSize, boolean isZeroStart){
         return new MockPage()
                 .setCurrentPage(currentPage)
                 .setPageSize(pageSize)
@@ -19,7 +19,7 @@ public class MockPageUtil {
     }
 
 
-    public static List<Object> subList(List<Object> objectList,int currentPage,int pageSize, boolean isZeroStart){
+    public static List<?> subList(List<?> objectList,int currentPage,int pageSize, boolean isZeroStart){
         //最终下标
         int finallyIndex = objectList.size()-1;
 

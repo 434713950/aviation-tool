@@ -4,14 +4,14 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
- * <p></p>
+ * <p>httpClient 连接配置,内部已经提供了默认参数</p>
  *
  * @author PengCheng
  * @date 2018/11/15
  */
 @Data
 @Accessors(chain = true)
-public class ConnectionProperties {
+public class HttpClientConnProperties {
 
     /**
      * 最大连接数

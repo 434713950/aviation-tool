@@ -6,7 +6,7 @@
 
     <groupId>com.github</groupId>
     <artifactId>aviation-tool</artifactId>
-    <version>1.1.0.DEV1</version>
+    <version>1.1.0.DEV2</version>
 
     <dependencies>
         <!-- Apache工具组件 -->
@@ -61,4 +61,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <!-- 项目jar上传地址，如需上传到release库，请将项目版本更正为release -->
+        <repository>
+            <id>nexus</id>
+            <name>3rd_part</name>
+            <url>http://121.43.190.92:8085/repository/3rd_part/</url>
+        </repository>
+    </distributionManagement>
 </project>
