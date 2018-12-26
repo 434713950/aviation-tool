@@ -39,6 +39,20 @@ public class IOUtil {
         }
     }
 
+    /**
+     * 该关闭方法一般用于jdbc中
+     * @param a
+     */
+    public static void close(AutoCloseable a){
+        try {
+            if (a != null){
+                a.close();
+            }
+        } catch (Exception e) {
+            //ignore
+        }
+    }
+
     public static int copy(InputStream input, OutputStream output) throws IOException {
         long count = copyLarge(input, output);
         if (count > Integer.MAX_VALUE) {
